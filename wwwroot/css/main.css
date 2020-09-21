@@ -1,0 +1,65 @@
+﻿#hud {
+    transition: height 0.3s;
+}
+
+.text-5xl {
+    line-height: 3.5rem;
+}
+
+.statusPillContainer {
+    width: 50px;
+}
+
+.statusPill {
+    height: 0.5rem;
+    width: 1rem;
+}
+
+.easy-button-button > span.button-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.leaflet-bar.disabled, .leaflet-bar button.disabled {
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.barHidden h2 {
+    display: none !important;
+}
+
+.barHidden p {
+    font-size: 1rem;
+}
+
+.barHidden > div {
+    margin-top: 0;
+}
+
+.barHidden > div:not(:last-child) {
+    margin-top: 0.2rem;
+}
+
+.barHidden #autopilotContainer > div {
+    display: flex !important;
+}
+
+.barHidden #indicatedAirspeed, .barHidden #trueAirspeed, .barHidden #wpDistance, .barHidden #wpETE {
+    display: inline-block;
+}
+
+.barHidden #trueAirspeed {
+    font-size: 0.7rem !important;
+}
+
+.barHidden .statusPill {
+    margin-top: -0.1rem;
+}
+
+@media (max-width: 1024px) {
+    #data {
+        grid-template-rows: 75% 1fr;
+    }
+}

@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="~/css/normalize.css">
+    <link href="https://unpkg.com/tailwindcss@@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="~/css/main.css" rel="stylesheet" />
+    <!-- Scripts -->
+    <environment include="Development">
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    </environment>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script src="~/js/leaflet.rotatedMarker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+    <script src='//unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'></script>
+</head>
+<body class="h-full">
+    <div id="container" class="flex flex-col h-screen">
+        <div id="hud" class="relative flex justify-center items-center bg-gray-800 text-orange-100" v-bind:class="barHidden ? 'h-8' : 'h-32'">
+            <div id="data" class="w-full h-full grid grid-flow-col grid-cols-2 grid-rows-2 lg:grid-rows-none lg:grid-cols-3" v-if="simConnected" v-bind:class="{ barHidden : barHidden }">
+                <div class="mt-2 flex flex-row justify-center">
+                    <div id="airspeedContainer" class="mr-12 lg:mr-16 text-center">
+                        <h2 class="text-sm lg:text-lg">Airspeed</h2>
+                        <p id="indicatedAirspeed" class="text-3xl lg:text-4xl">{{ Math.round(acInfo.airspeedIndicated) }} kts</p>
+                        <p id="trueAirspeed" class="text-sm">{{ Math.round(acInfo.airspeedTrue) }} kts (TAS)</p>
+                    </div>
+                    <div id="altitudeContainer" class="mr-12 lg:mr-16 text-center">
+                        <h2 class="text-sm lg:text-lg">Altitude</h2>
+                        <p id="altitude" class="text-3xl lg:text-4xl">{{ Math.round(acInfo.altitude) }} ft</p>
+                    </div>
+                    <div id="fuelContainer" class="lg:mr-16 text-center">
+                        <h2 class="text-sm lg:text-lg">Fuel</h2>
+                        <p id="fuel" class="text-3xl lg:text-4xl" v-bind:class="fuelQuantityPercent <= 10 ? 'text-red-600' : 'text-orange-100'">{{ fuelQuantityPercent }}%</p>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-2 lg:block row-start-2 col-start-1 col-end-3 lg:row-span-1 lg:col-start-3" v-show="acInfo.gpsWaypointModeActive">
+                    <h2 class="text-lg hidden lg:block">Navigation</h2>
+                    <p id="wpDistance" class="mr-6">Distance to next WP: {{ Math.round(acInfo.gpsWaypointDistance / 1000) }} km</p>
+                    <p id="wpETE">ETE to next WP: {{ convertSecondsToHMS(acInfo.gpswpete) }}</p>
+                </div>
+                <div id="autopilotContainer" class="flex flex-col items-center mt-2 col-start-1" @*v-show="acInfo.autopilot.available"*@>
+                    <h2 class="text-sm lg:text-lg">Autopilot</h2>
+                    <div class="flex justify-center w-full grid grid-flow-col grid-rows-2 gap-y-2 lg:gap-2">
+                        <div class="flex flex-col items-center statusPillContainer" v-for="(value, key) in autopilotProperties" v-bind:key="key">
+                            <div class="text-sm">{{ apDisplayName(key) }}</div>
+                            <div class="rounded-full statusPill" v-bind:class="[value ? 'bg-green-500' : 'bg-red-600']" v-bind:title="key"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="connectionRequired" class="text-center" v-else>
+                <p class="text-xl" v-if="simConnected === null">Connecting to the flight sim...</p>
+                <p class="text-xl" v-else-if="!simConnected">Unable to connect to the flight sim. Please make sure the flight sim is running and restart the app.</p>
+            </div>
+            <div class="absolute bottom-0 right-0 cursor-pointer">
+                <span class="material-icons mr-2" v-on:click="barHidden = !barHidden">{{ barHidden ? 'expand_more' : 'expand_less' }}</span>
+            </div>
+        </div>
+        <div id="map" class="flex-1 h-full"></div>
+    </div>
+    <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/js/main.js" type="text/javascript"></script>
+</body>
+</html>
