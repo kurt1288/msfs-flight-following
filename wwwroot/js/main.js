@@ -5,9 +5,34 @@ class Map {
     marker;
     followButton;
     flightPathButton;
-    flightPath
+    flightPath;
+    layerControl;
 
     constructor() {
+        this.InitMap();
+    }
+
+    UpdatePosition(lat, lng, heading) {
+        const newPos = new L.LatLng(lat, lng);
+
+        this.marker.setLatLng(newPos);
+        this.marker.setRotationAngle(heading);
+
+        if (!this.followButton.button.classList.contains("disabled"))
+            this.map.setView(newPos);
+    }
+
+    DrawFlightPath(from, to) {
+        if (this.flightPathButton.button.classList.contains("disabled"))
+            return;
+
+        this.flightPath = L.Polyline.Arc(from, to, {
+            vertices: 200,
+            color: "#ea70d4"
+        }).addTo(this.map);
+    }
+
+    async InitMap() {
         // Basemap layer
         const cartoDBlayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -27,43 +52,38 @@ class Map {
 
         // NavAids layer
         const navAidsLayer = new L.TileLayer("https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png", {
-          maxZoom: 14,
-          minZoom: 4,
-          tms: true,
-          subdomains: "12",
-          format: "image/png",
-          transparent: true,
-          attribution: "<a href=\"https://www.openaip.net\" target=\"_blank\" style=\"\">openAIP</a>"
+            maxZoom: 14,
+            minZoom: 4,
+            tms: true,
+            subdomains: "12",
+            format: "image/png",
+            transparent: true,
+            attribution: "<a href=\"https://www.openaip.net\" target=\"_blank\" style=\"\">openAIP</a>"
         });
 
+        const baseMaps = {
+            "OpenStreetMap": openStreetMap,
+            "CartoDB Voyager": cartoDBlayer,
+            "Topography": topoMap
+        }
+
         this.map = L.map('map', {
-            center: [0,0],
+            center: [0, 0],
             zoom: 13,
-            layers: [cartoDBlayer]
+            layers: [openStreetMap],
+            preferCanvas: true
         });
 
         this.map.on("dragstart", () => {
             this.followButton.disable();
         });
 
-        const baseMaps = {
-            "CartoDB Voyager": cartoDBlayer,
-            "OpenStreetMap": openStreetMap,
-            "Topography": topoMap
-        }
-
-        const overlayMaps = {
-            "OpenAIP NavAids": navAidsLayer
-        }
-
-        L.control.layers(baseMaps, overlayMaps).addTo(this.map);
-
         const icon = L.icon({
             iconUrl: "./assets/airplane.svg",
             iconSize: [40, 40]
         });
 
-        this.marker = L.marker([51.505, -0.09], { 
+        this.marker = L.marker([0,0], {
             icon: icon,
             rotationAngle: 0,
             rotationOrigin: 'center center'
@@ -91,36 +111,28 @@ class Map {
                 this.flightPathButton.disable();
             }
         }, 'Display flight path').addTo(this.map);
-    }
 
-    UpdatePosition(lat, lng, heading) {
-        const newPos = new L.LatLng(lat, lng);
+        const overlayMaps = {
+            "OpenAIP NavAids": navAidsLayer
+        }
 
-        this.marker.setLatLng(newPos);
-        this.marker.setRotationAngle(heading);
-
-        if (!this.followButton.button.classList.contains("disabled"))
-            this.map.setView(newPos);
-    }
-
-    DrawFlightPath(from, to) {
-        if (this.flightPathButton.button.classList.contains("disabled"))
-            return;
-
-        this.flightPath = L.Polyline.Arc(from, to, {
-            vertices: 200,
-            color: "#ea70d4"
-        }).addTo(this.map);
+        this.layerControl = L.control.layers(baseMaps, overlayMaps).addTo(this.map);
     }
 }
 
 const app = new Vue({
-    el: "#hud",
+    el: "#container",
     data: {
         map: null,
         acInfo: null,
         simConnected: null,
-        barHidden: false
+        barHidden: false,
+        showSearch: false,
+        searchText: "",
+        searchResults: [],
+        searchTimeout: null,
+        db: null,
+        selectedAirport: null
     },
     watch: {
         acInfo(newData, oldData) {
@@ -139,7 +151,28 @@ const app = new Vue({
             this.acInfo = data.data;
         });
 
+        this.db = new Dexie("airports_database");
+        this.db.version(1).stores({
+            airports: '++id,country,name,icao,geolocation,radio,rwy,type'
+        });
+
+        const count = await this.db.airports.count();
+        if (count === 0) {
+            const response = await fetch("/get/airports");
+            const result = await response.json();
+
+            this.db.airports.bulkAdd(result.data);
+        }
+
         this.map = new Map();
+
+        const airportsLayer = L.layerGroup();
+        this.db.airports.each(airport => {
+            airportsLayer.addLayer(L.circleMarker([airport.geolocation.lat, airport.geolocation.lon], { radius: 2 }).on('click', () => {
+                this.selectedAirport = airport;
+            }));
+        });
+        this.map.layerControl.addOverlay(airportsLayer, "Airports");
 
         setTimeout(() => {
             if (this.simConnected === null)
@@ -184,6 +217,34 @@ const app = new Vue({
                 default:
                     return "UKN";
             }
+        },
+        searchAirports() {
+            clearTimeout(this.searchTimeout);
+
+            if (this.searchText.trim().length === 0) {
+                this.searchResults = [];
+                return;
+            }
+
+            this.searchTimeout = setTimeout(async () => {
+                this.searchResults = [];
+
+                let results = await this.db.airports.where("icao").equalsIgnoreCase(this.searchText).toArray();
+                if (results.length === 0) {
+                    const regex = new RegExp(this.searchText, "i");
+                    results = await app.db.airports.filter(airport => regex.test(airport.name)).toArray()
+                }
+
+                this.searchResults.push(results);
+            }, 1000);
+        },
+        focusAirport(airport) {
+            this.map.followButton.disable();
+            this.showSearch = false;
+            this.searchResults = [];
+            this.searchText = "";
+            this.map.map.setView([airport.geolocation.lat, airport.geolocation.lon], 13);
+            this.selectedAirport = airport;
         }
     },
     computed: {

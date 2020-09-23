@@ -15,10 +15,14 @@
     width: 1rem;
 }
 
-.easy-button-button > span.button-state {
+.easy-button-button > span.button-state, .custom-control span.button-state {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.custom-control {
+    top: 18.2rem;
 }
 
 .leaflet-bar.disabled, .leaflet-bar button.disabled {
@@ -56,6 +60,32 @@
 
 .barHidden .statusPill {
     margin-top: -0.1rem;
+}
+
+#searchBoxContainer {
+    left: 30px;
+    top: -2px;
+    height: auto;
+    border: 2px solid rgba(0,0,0,0.2);
+    width: 12rem;
+}
+
+#searchBoxContainer input {
+    padding: 0.2rem 0.4rem;
+    height: 30px;
+}
+
+#searchResults {
+    background: white;
+    font-size: 0.7rem;
+    border-top: 2px solid rgba(0,0,0,0.2);
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+#airportInfo {
+    width: 20rem;
+    z-index: 9999;
 }
 
 @media (max-width: 1024px) {

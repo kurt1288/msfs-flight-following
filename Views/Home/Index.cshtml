@@ -22,6 +22,7 @@
     <script src="~/js/leaflet.rotatedMarker.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
     <script src='//unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'></script>
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
 </head>
 <body class="h-full">
     <div id="container" class="flex flex-col h-screen">
@@ -47,7 +48,7 @@
                     <p id="wpDistance" class="mr-6">Distance to next WP: {{ Math.round(acInfo.gpsWaypointDistance / 1000) }} km</p>
                     <p id="wpETE">ETE to next WP: {{ convertSecondsToHMS(acInfo.gpswpete) }}</p>
                 </div>
-                <div id="autopilotContainer" class="flex flex-col items-center mt-2 col-start-1" @*v-show="acInfo.autopilot.available"*@>
+                <div id="autopilotContainer" class="flex flex-col items-center mt-2 col-start-1" v-show="acInfo.autopilot.available">
                     <h2 class="text-sm lg:text-lg">Autopilot</h2>
                     <div class="flex justify-center w-full grid grid-flow-col grid-rows-2 gap-y-2 lg:gap-2">
                         <div class="flex flex-col items-center statusPillContainer" v-for="(value, key) in autopilotProperties" v-bind:key="key">
@@ -65,7 +66,47 @@
                 <span class="material-icons mr-2" v-on:click="barHidden = !barHidden">{{ barHidden ? 'expand_more' : 'expand_less' }}</span>
             </div>
         </div>
-        <div id="map" class="flex-1 h-full"></div>
+        <div class="flex-1 h-full relative">
+            <div id="map" class="h-full"></div>
+            <div id="airportInfo" v-if="selectedAirport" class="absolute top-0 right-0 bg-white shadow-lg overflow-y-auto flex-1 h-full">
+                <div class="flex justify-between items-center bg-orange-400 p-4">
+                    <h2 class="text-lg font-bold">{{ selectedAirport.name }} ({{ selectedAirport.icao }})</h2>
+                    <span class="material-icons cursor-pointer" v-on:click="selectedAirport = null">close</span>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-semibold" v-if="selectedAirport.radio.length > 0">Frequencies</h3>
+                    <ul class="pl-3 font-sm">
+                        <li v-for="(freq, index) in selectedAirport.radio" v-bind:key="index">{{ freq.description }} - {{ freq.frequency }}</li>
+                    </ul>
+                    <h3 class="font-semibold" v-if="selectedAirport.rwy.length > 0">Runways</h3>
+                    <ul class="pl-3 font-sm">
+                        <li v-for="(runway, index) in selectedAirport.rwy">
+                            <p>{{ runway.name }}</p>
+                            <p class="pl-4">Length: {{ Math.round(runway.length.text) }}{{ runway.length.unit }}</p>
+                            <p class="pl-4">Surface: {{ runway.sfc }}</p>
+                        </li>
+                    </ul>
+                    <a v-if="selectedAirport.icao !== null" v-bind:href="'https://skyvector.com/airport/' + selectedAirport.icao" class="underline text-sm" target="_blank">https://skyvector.com/airport/{{ selectedAirport.icao }}</a>
+                </div>
+            </div>
+        </div>
+        <div class="leaflet-touch leaflet-top leaflet-left custom-control absolute left-0">
+            <div class="leaflet-bar leaflet-control">
+                <button type="button" class="leaflet-bar-part leaflet-interactive unnamed-state-active" v-on:click="showSearch = !showSearch">
+                    <span class="button-state state-unnamed-state unnamed-state-active">
+                        <span class="material-icons">search</span>
+                    </span>
+                </button>
+                <div v-if="showSearch" id="searchBoxContainer" class="absolute bg-white box-content">
+                    <input type="text" name="name" value="" class="h-full w-full" v-model="searchText" v-on:input="searchAirports" />
+                    <div id="searchResults" class="bg-white" v-if="searchResults.length > 0">
+                        <ul>
+                            <li v-for="(item, index) in searchResults[0]" v-bind:key="index" v-on:click="focusAirport(item)" class="px-3 py-2 cursor-pointer hover:bg-gray-200">{{ item.name }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/main.js" type="text/javascript"></script>
