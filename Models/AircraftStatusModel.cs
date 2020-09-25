@@ -1,4 +1,5 @@
-﻿using static MSFSFlightFollowing.Models.SimConnectStructs;
+﻿using System;
+using static MSFSFlightFollowing.Models.SimConnectStructs;
 
 namespace MSFSFlightFollowing.Models
 {
@@ -91,15 +92,16 @@ namespace MSFSFlightFollowing.Models
       // For testing
       public static AircraftStatusModel GetDummyData()
       {
+         Random rnd = new Random();
          var dummyData = new AircraftStatusStruct
          {
             Latitude = 47.463631,
             Longitude = -122.307794,
-            Altitude = 146,
+            Altitude = rnd.Next(0, 30000),
             TotalFuel = 300,
-            CurrentFuel = 150,
+            CurrentFuel = rnd.Next(0, 300),
             TrueHeading = 180,
-            AirspeedIndicated = 0,
+            AirspeedIndicated = rnd.Next(0, 300),
             AirspeedTrue = 0,
             NavHasSignal = false,
             NavHasDME = false,
@@ -107,12 +109,12 @@ namespace MSFSFlightFollowing.Models
             GPSFlightPlanActive = true,
             GPSWaypointModeActive = true,
             GPSWaypointIndex = 1,
-            GPSWaypointDistance = 0,
+            GPSWaypointDistance = rnd.Next(0, 10000),
             GPSNextWPLatitude = 51.4775,
             GPSNextWPLongitude = -0.461389,
             GPSPrevWPLatitude = 47.448889,
             GPSPrevWPLongitude = -122.309444,
-            GPSWPETE = 0,
+            GPSWPETE = rnd.Next(0,30000),
             AutopilotAvailable = false,
             AutopilotMaster = true,
             AutopilotFlightDirector = true,

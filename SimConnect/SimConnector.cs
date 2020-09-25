@@ -45,7 +45,7 @@ namespace MSFSFlightFollowing.Models
          cancellationToken = new CancellationTokenSource();
 
          // Enable for sending test data to client
-         //TestDataRunner();
+         TestDataRunner();
       }
 
       public void Connect()
@@ -203,22 +203,26 @@ namespace MSFSFlightFollowing.Models
       #region TestData
       public void TestDataRunner()
       {
-         var wsData = new ClientData()
-         {
-            IsConnected = true,
-            Data = AircraftStatusModel.GetDummyData()
-         };
-
          Thread runner = new Thread((obj) =>
          {
             while (true)
             {
                Thread.Sleep(1000);
-               _wsConnector.Clients.All.SendAsync("ReceiveData", wsData);
+               _wsConnector.Clients.All.SendAsync("ReceiveData", GenTestData());
             }
          });
          runner.IsBackground = true;
          runner.Start();
+      }
+
+      private ClientData GenTestData()
+      {
+         var wsData = new ClientData()
+         {
+            IsConnected = true,
+            Data = AircraftStatusModel.GetDummyData()
+         };
+         return wsData;
       }
       #endregion
    }
