@@ -193,7 +193,7 @@ const app = new Vue({
     },
     methods: {
         convertSecondsToHMS(value) {
-            if (!value || isNaN(value) || value < 0)
+            if (value == null || isNaN(value) || value < 0)
                 return;
 
             return new Date(value * 1000).toISOString().substr(11, 8)
