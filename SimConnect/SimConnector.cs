@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 
 namespace MSFSFlightFollowing.Models
 {
@@ -27,14 +28,16 @@ namespace MSFSFlightFollowing.Models
       private SimConnect simconnect = null;
       private IHubContext<WebSocketConnector> _wsConnector;
       private IHostApplicationLifetime _lifetime;
+      private IWebHostEnvironment _env;
 
       const uint WM_USER_SIMCONNECT = 0x0402;
 
-      public SimConnector(IHubContext<WebSocketConnector> wsConnector, ILogger<SimConnector> logger, IHostApplicationLifetime lifetime)
+      public SimConnector(IHubContext<WebSocketConnector> wsConnector, ILogger<SimConnector> logger, IHostApplicationLifetime lifetime, IWebHostEnvironment env)
       {
          _logger = logger;
          _wsConnector = wsConnector;
          _lifetime = lifetime;
+         _env = env;
 
          _lifetime.ApplicationStopping.Register(Disconnect);
 
@@ -45,7 +48,7 @@ namespace MSFSFlightFollowing.Models
          cancellationToken = new CancellationTokenSource();
 
          // Enable for sending test data to client
-         TestDataRunner();
+         //TestDataRunner();
       }
 
       public void Connect()
@@ -203,6 +206,9 @@ namespace MSFSFlightFollowing.Models
       #region TestData
       public void TestDataRunner()
       {
+         if (!_env.IsDevelopment())
+            return;
+
          Thread runner = new Thread((obj) =>
          {
             while (true)
