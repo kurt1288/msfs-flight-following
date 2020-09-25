@@ -25,7 +25,10 @@ namespace MSFSFlightFollowing
             new Task(() => MessageWindow.MessageLoop()).Start();
 
             host.RunAsync();
-            logger.LogInformation("The application is running.\n\nIf your browser didn't automatically open a window, go to {0}.\nTo close the app, just close this window.", "http://localhost:9000");
+            logger.LogInformation("The application is running.\n\n" +
+               "If your browser didn't automatically open a window, go to {0}.\n" +
+               "Other devices on your network can go to {1}.\n\n" +
+               "To shutdown the app, just close this window.", "http://localhost:9000", $"http://{Environment.MachineName.ToLower()}:9000");
             host.WaitForShutdown();
          }
          catch (Exception ex)
