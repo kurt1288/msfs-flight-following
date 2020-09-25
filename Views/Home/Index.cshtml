@@ -28,7 +28,7 @@
     <div id="container" class="flex flex-col h-screen">
         <div id="hud" class="relative flex justify-center items-center bg-gray-800 text-orange-100" v-bind:class="barHidden ? 'h-8' : 'h-32'">
             <div id="data" class="w-full h-full grid grid-flow-col grid-cols-2 grid-rows-2 lg:grid-rows-none lg:grid-cols-3" v-if="simConnected" v-bind:class="{ barHidden : barHidden }">
-                <div class="mt-2 flex flex-row justify-center">
+                <div class="mt-2 flex flex-row justify-center col-start-2">
                     <div id="airspeedContainer" class="mr-12 lg:mr-16 text-center">
                         <h2 class="text-sm lg:text-lg">Airspeed</h2>
                         <p id="indicatedAirspeed" class="text-3xl lg:text-4xl">{{ Math.round(acInfo.airspeedIndicated) }} kts</p>
@@ -104,6 +104,53 @@
                             <li v-for="(item, index) in searchResults[0]" v-bind:key="index" v-on:click="focusAirport(item)" class="px-3 py-2 cursor-pointer hover:bg-gray-200">{{ item.name }}</li>
                         </ul>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div id="overlay" class="absolute inset-0 h-full w-full flex bg-gray-500 bg-opacity-50 justify-center items-center" v-on:click.self="showAlerts = false" v-if="showAlerts">
+            <div class="bg-white w-full max-w-md rounded shadow-lg">
+                <h2 class="text-2xl text-gray-200 bg-gray-800 pl-4 py-3 rounded-t">Alerts</h2>
+                <div class="p-4">
+                    <h3 class="text-lg text-gray-800 mb-2">Create a new alert</h3>
+                    <div class="flex">
+                        <div class="inline-block relative w-1/3">
+                            <select class="w-full block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-2 py-2 rounded shadow leading-tight focus:outline-none text-sm cursor-pointer" v-model="alertForm.property">
+                                <option value="elapsed">Elapsed time</option>
+                                <option value="ete">ETE</option>
+                                <option value="wp">WP Distance</option>
+                                <option value="airspeed">Airspeed</option>
+                                <option value="altitude">Altitude</option>
+                                <option value="fuel">Fuel</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                            </div>
+                        </div>
+                        <div class="inline-block relative w-1/3 mx-3">
+                            <select class="w-full block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-2 py-2 rounded shadow leading-tight focus:outline-none text-sm cursor-pointer" v-model="alertForm.operator">
+                                <option value="equals">equals</option>
+                                <option value="less" v-if="alertForm.property !== 'elapsed'">is less than</option>
+                                <option value="greater"v-if="alertForm.property !== 'elapsed'">is greater than</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                            </div>
+                        </div>
+                        <input v-if="alertForm.property === 'elapsed' || alertForm.property === 'ete'" type="text" pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}" placeholder="##:##:##" name="name" class="bg-white border border-gray-400 hover:border-gray-500 px-2 rounded shadow leading-tight focus:outline-none text-sm w-1/3" v-model="alertForm.value" />
+                        <input v-else type="number" name="name" class="bg-white border border-gray-400 hover:border-gray-500 px-2 rounded shadow leading-tight focus:outline-none text-sm w-1/3" v-model="alertForm.value" />
+                    </div>
+                    <p class="text-sm text-orange-600 mt-1 ml-1 text-right" v-if="alertForm.property === 'elapsed' || alertForm.property === 'ete'">Value must be specified in hh:mm:ss</p>
+                    <div class="flex justify-end items-center mt-4">
+                        <p class="text-blue-500 hover:text-blue-800 cursor-pointer mr-5" v-on:click="showAlerts = false">Cancel</p>
+                        <button type="button" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded font-bold disabled:opacity-75" v-bind:disabled="!alertForm.value" v-on:click="saveAlert">Save</button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg text-gray-800 mb-2">Current Alerts</h3>
+                    <ul v-if="alerts.length > 0">
+                        <li v-for="alert in alerts" class="flex justify-between text-sm border border-gray-400 rounded p-3 mb-1">{{ alert.name }} <span class="text-red-600 cursor-pointer" v-on:click="removeAlert(alert)">Delete</span></li>
+                    </ul>
+                    <p v-else class="text-sm">You have no alerts configured</p>
                 </div>
             </div>
         </div>

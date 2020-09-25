@@ -22,7 +22,12 @@
 }
 
 .custom-control {
-    top: 18.2rem;
+    top: 20.9rem;
+    transition: top 0.3s;
+}
+
+#hud.h-8 ~ .custom-control {
+    top: 14.9rem;
 }
 
 .leaflet-bar.disabled, .leaflet-bar button.disabled {
@@ -86,6 +91,15 @@
 #airportInfo {
     width: 20rem;
     z-index: 9999;
+}
+
+#overlay {
+    z-index: 99999;
+}
+
+#overlay button:disabled {
+    opacity: 75%;
+    cursor: not-allowed;
 }
 
 @media (max-width: 1024px) {
