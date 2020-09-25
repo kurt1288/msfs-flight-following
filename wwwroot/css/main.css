@@ -55,8 +55,12 @@
     display: flex !important;
 }
 
-.barHidden #indicatedAirspeed, .barHidden #trueAirspeed, .barHidden #wpDistance, .barHidden #wpETE {
+.barHidden #indicatedAirspeed, .barHidden #wpDistance, .barHidden #wpETE {
     display: inline-block;
+}
+
+.barHidden #trueAirspeed {
+    display: none;
 }
 
 .barHidden #trueAirspeed {
