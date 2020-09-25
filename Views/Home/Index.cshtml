@@ -27,7 +27,7 @@
 <body class="h-full">
     <div id="container" class="flex flex-col h-screen">
         <div id="hud" class="relative flex justify-center items-center bg-gray-800 text-orange-100" v-bind:class="barHidden ? 'h-8' : 'h-32'">
-            <div id="data" class="w-full h-full grid grid-flow-col grid-cols-2 grid-rows-2 lg:grid-rows-none lg:grid-cols-3" v-if="simConnected" v-bind:class="{ barHidden : barHidden }">
+            <div id="data" class="w-full h-full overflow-x-auto md:overflow-x-hidden md:grid grid-flow-col grid-cols-2 grid-rows-2 lg:grid-rows-none lg:grid-cols-3" v-if="simConnected" v-bind:class="{ barHidden : barHidden }">
                 <div class="mt-2 flex flex-row justify-center lg:col-start-2 lg:col-span-1" v-bind:class="[ acInfo.autopilot.available ? 'col-start-2' : 'col-start-1 col-span-2' ]">
                     <div id="airspeedContainer" class="mr-12 lg:mr-16 text-center">
                         <h2 class="text-sm lg:text-lg">Airspeed</h2>
@@ -48,7 +48,7 @@
                     <p id="wpDistance" class="mr-6">Distance to next WP: {{ Math.round(acInfo.gpsWaypointDistance / 1000) }} km</p>
                     <p id="wpETE">ETE to next WP: {{ convertSecondsToHMS(acInfo.gpswpete) }}</p>
                 </div>
-                <div id="autopilotContainer" class="flex flex-col items-center mt-2 col-start-1" v-show="acInfo.autopilot.available">
+                <div id="autopilotContainer" class="flex flex-col items-center my-2 col-start-1" v-show="acInfo.autopilot.available">
                     <h2 class="text-sm lg:text-lg">Autopilot</h2>
                     <div class="flex justify-center w-full grid grid-flow-col grid-rows-2 gap-y-2 lg:gap-2">
                         <div class="flex flex-col items-center statusPillContainer" v-for="(value, key) in autopilotProperties" v-bind:key="key">
